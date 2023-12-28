@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package mytekst.test.v1;
+
+option go_package = "github.com/mytekst/proto/gen/go/test;test";
+
+// import "google/protobuf/timestamp.proto";
+// import "google/protobuf/empty.proto";
+
+service Test {
+  rpc Test(TestRequest) returns (TestResponse) {}
+}
+
+message TestRequest {
+  string x = 1;
+}
+
+message TestResponse {
+  string y = 1;
+}
+

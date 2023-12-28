@@ -1,0 +1,34 @@
+version: "3"
+
+vars:
+  BUILDER_IMAGE_TAG: anyboards-protoc:latest
+  BUILD_VOLUME: /root/vol
+
+tasks:
+  gen:
+    cmds:
+      - task: builder
+
+      - task: protoc
+        vars: { PROTO_FILE: proto/test.proto, OUT_DIR: test }
+      
+  protoc:
+    internal: true
+    vars: 
+      GO_OUT_DIR: "{{.BUILD_VOLUME}}/gen/go/{{.OUT_DIR}}"
+      JS_OUT_DIR: "{{.BUILD_VOLUME}}/gen/js/{{.OUT_DIR}}"
+    cmds:
+      - rm -rf gen/go && mkdir -p gen/go/{{.OUT_DIR}}
+      - rm -rf gen/js && mkdir -p gen/js/{{.OUT_DIR}}
+      - >-
+        docker run --rm -it -v=.:{{.BUILD_VOLUME}} {{.BUILDER_IMAGE_TAG}}
+        protoc --proto_path={{.BUILD_VOLUME}}/proto {{.BUILD_VOLUME}}/{{.PROTO_FILE}}
+        --go_out={{.GO_OUT_DIR}} --go_opt=paths=source_relative
+        --go-grpc_out={{.GO_OUT_DIR}} --go-grpc_opt=paths=source_relative
+        --js_out=import_style=commonjs:{{.JS_OUT_DIR}}
+        --grpc-web_out=import_style=commonjs,mode=grpcwebtext:{{.JS_OUT_DIR}}
+
+  builder:
+    internal: true
+    cmds:
+      - docker build -t {{.BUILDER_IMAGE_TAG}} .
